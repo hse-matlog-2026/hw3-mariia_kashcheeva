@@ -89,6 +89,7 @@ def evaluate(formula: Formula, model: Model) -> bool:
         return not (first_value or second_value)
     raise ValueError('Unknown operator: ' + formula.root)
 
+
 def all_models(variables: Sequence[str]) -> Iterable[Model]:
     """Calculates all possible models over the given variable names.
 

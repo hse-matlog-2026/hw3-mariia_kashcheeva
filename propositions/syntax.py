@@ -59,9 +59,8 @@ def is_binary(string: str) -> bool:
     Returns:
         ``True`` if the given string is a binary operator, ``False`` otherwise.
     """
-    return string == '&' or string == '|' or string == '->'
-    # For Chapter 3:
-    # return string in {'&', '|',  '->', '+', '<->', '-&', '-|'}
+    # return string == '&' or string == '|' or string == '->'
+    return string in {'&', '|',  '->', '+', '<->', '-&', '-|'}
 
 @frozen
 class Formula:
@@ -359,7 +358,21 @@ class Formula:
         """
         for variable in substitution_map:
             assert is_variable(variable)
-        # Task 3.3
+        if is_variable(self.root) and self.root in substitution_map:
+            return substitution_map[self.root]
+
+        if is_constant(self.root):
+            return Formula(self.root)
+
+        if is_unary(self.root):
+            return Formula(self.root,
+                           self.first.substitute_variables(substitution_map))
+
+        if is_binary(self.root):
+            return Formula(self.root,
+                           self.first.substitute_variables(substitution_map),
+                           self.second.substitute_variables(substitution_map))
+        return Formula(self.root)
 
     def substitute_operators(self, substitution_map: Mapping[str, Formula]) -> \
             Formula:
@@ -386,7 +399,28 @@ class Formula:
             ~(~~(~x|~y)|~~z)
         """
         for operator in substitution_map:
-            assert is_constant(operator) or is_unary(operator) or \
-                   is_binary(operator)
+            assert is_constant(operator) or is_unary(operator) or is_binary(operator)
             assert substitution_map[operator].variables().issubset({'p', 'q'})
-        # Task 3.4
+
+        if self.root in substitution_map:
+            template = substitution_map[self.root]
+
+            if is_constant(self.root):
+                return template
+
+            if is_unary(self.root):
+                return template.substitute_variables({'p': self.first})
+
+            if is_binary(self.root):
+                return template.substitute_variables({'p': self.first, 'q': self.second})
+
+        if is_unary(self.root):
+            return Formula(self.root,
+                           self.first.substitute_operators(substitution_map))
+
+        if is_binary(self.root):
+            return Formula(self.root,
+                           self.first.substitute_operators(substitution_map),
+                           self.second.substitute_operators(substitution_map))
+
+        return Formula(self.root)
