@@ -402,25 +402,24 @@ class Formula:
             assert is_constant(operator) or is_unary(operator) or is_binary(operator)
             assert substitution_map[operator].variables().issubset({'p', 'q'})
 
-        if self.root in substitution_map:
-            template = substitution_map[self.root]
-
-            if is_constant(self.root):
-                return template
-
-            if is_unary(self.root):
-                return template.substitute_variables({'p': self.first})
-
-            if is_binary(self.root):
-                return template.substitute_variables({'p': self.first, 'q': self.second})
-
         if is_unary(self.root):
-            return Formula(self.root,
-                           self.first.substitute_operators(substitution_map))
+            new_first = self.first.substitute_operators(substitution_map)
+            if self.root in substitution_map:
+                template = substitution_map[self.root]
+                return template.substitute_variables({'p': new_first})
+            else:
+                return Formula(self.root, new_first)
 
         if is_binary(self.root):
-            return Formula(self.root,
-                           self.first.substitute_operators(substitution_map),
-                           self.second.substitute_operators(substitution_map))
+            new_first = self.first.substitute_operators(substitution_map)
+            new_second = self.second.substitute_operators(substitution_map)
+            if self.root in substitution_map:
+                template = substitution_map[self.root]
+                return template.substitute_variables({'p': new_first, 'q': new_second})
+            else:
+                return Formula(self.root, new_first, new_second)
+
+        if is_constant(self.root) and self.root in substitution_map:
+            return substitution_map[self.root]
 
         return Formula(self.root)
